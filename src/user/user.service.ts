@@ -1,10 +1,13 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User, UserDocument } from './schemas/user.schema';
+import { SignupDto } from './../auth/dto/signup.dto';
+import {
+    Injectable,
+    ConflictException,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Collection, Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UserService {
@@ -12,44 +15,40 @@ export class UserService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
     ) {}
 
-    async create(createUserDto: CreateUserDto): Promise<User> {
-        const { username, email, password } = createUserDto;
+    async create(signupDto: SignupDto): Promise<UserDocument> {
+        // Change return type
+        const { username, email, password } = signupDto;
 
-        // check if email already exist
         const existing = await this.userModel.findOne({ email });
         if (existing) {
             throw new ConflictException('Email already in use');
         }
 
-        // hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new this.userModel({
+        const createdUser = await this.userModel.create({
             username,
             email,
             password: hashedPassword,
         });
 
-        return user.save();
+        return createdUser;
     }
 
-    async findByEmail(email: string): Promise<User | null> {
+    async findByEmail(email: string): Promise<UserDocument | null> {
         return this.userModel.findOne({ email }).exec();
     }
 
-    findAll() {
-        return `This action returns all user`;
+    async findById(id: string): Promise<User> {
+        const user = await this.userModel
+            .findById(id)
+            .select('-password')
+            .exec();
+        if (!user) throw new NotFoundException('User not found');
+        return user;
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} user`;
-    }
-
-    update(id: number, updateUserDto: UpdateUserDto) {
-        return `This action updates a #${id} user`;
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} user`;
+    async findAll(): Promise<User[]> {
+        return await this.userModel.find().exec();
     }
 }
