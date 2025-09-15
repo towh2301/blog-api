@@ -8,7 +8,7 @@ export class User {
     @Prop({ required: true, unique: true }) // typo fixed: "require" → "required"
     username: string;
 
-    @Prop({ required: true, unique: true })
+    @Prop({ required: true, unique: true, index: true })
     email: string;
 
     @Prop({ required: true })
