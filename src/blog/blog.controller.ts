@@ -17,6 +17,7 @@ import { Role } from 'src/auth/enum/role.enum';
 import { RoleGuard } from 'src/auth/guard/jwt-auth.guard';
 import { BlogCreationDto } from './dto/blog-create.dto';
 import { BlogUpdateDto } from './dto/blog-update.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('blog')
 @UseGuards(AuthGuard('jwt'), RoleGuard)
